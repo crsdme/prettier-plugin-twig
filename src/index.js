@@ -1,3 +1,4 @@
+import { embed } from "./embed.js";
 import { print } from "./printer.js";
 import { parse } from "./parser.js";
 import * as symbols from "./util/publicSymbols.js";
@@ -44,6 +45,7 @@ const parsers = {
  */
 const printers = {
     twig: {
+        embed,
         print,
         printComment(commentPath) {
             const comment = commentPath.getValue();

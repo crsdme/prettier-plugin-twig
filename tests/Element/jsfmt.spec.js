@@ -90,4 +90,18 @@ describe("Elements", () => {
         });
         expect(actual).toMatchFileSnapshot(snapshotFile);
     });
+
+    it("should format embedded JavaScript and JSON in script tags", async () => {
+        const { actual, snapshotFile } = await run_spec(import.meta.url, {
+            source: "scriptFormatting.twig"
+        });
+        expect(actual).toMatchFileSnapshot(snapshotFile);
+    });
+
+    it("should repair glued statements inside script then format", async () => {
+        const { actual, snapshotFile } = await run_spec(import.meta.url, {
+            source: "scriptRepair.twig"
+        });
+        expect(actual).toMatchFileSnapshot(snapshotFile);
+    });
 });

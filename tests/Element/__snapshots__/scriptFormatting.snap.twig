@@ -1,0 +1,21 @@
+{# vanilla JS inside script #}
+<script>
+    const foo = { bar: 1, baz: 2 };
+
+    function f(a, b) {
+        return a + b;
+    }
+</script>
+
+{# JSON #}
+<script type="application/json">
+    { "items": [1, 2], "ok": true }
+</script>
+
+{# Twig inside script: leave to normal printer (no single JS parse) #}
+<script>
+    const cfg = {{ config|json_encode }};
+</script>
+
+{# External script: ignore body embedding rules #}
+<script src="{{ asset('app.js') }}"></script>

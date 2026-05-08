@@ -10,7 +10,7 @@ import {
 
 const { group, line, hardline, softline, indent, join } = doc.builders;
 
-const printOpeningTag = (node, path, print, options) => {
+export const printElementOpeningTag = (node, path, print, options) => {
     const groupId = Symbol("opening-tag");
 
     const opener = "<" + node.name;
@@ -49,7 +49,9 @@ const printSeparatedList = (path, print, separator, attrName) => {
 const printElement = (node, path, print, options) => {
     // Set a flag in case attributes contain, e.g., a FilterExpression
     node[EXPRESSION_NEEDED] = true;
-    const openingGroup = group(printOpeningTag(node, path, print, options));
+    const openingGroup = group(
+        printElementOpeningTag(node, path, print, options)
+    );
     node[EXPRESSION_NEEDED] = false;
     node[STRING_NEEDS_QUOTES] = false;
 
