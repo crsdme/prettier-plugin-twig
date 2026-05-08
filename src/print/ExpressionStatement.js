@@ -4,14 +4,10 @@ import {
     EXPRESSION_NEEDED,
     STRING_NEEDS_QUOTES,
     isContractableNodeType,
-    someParentNode
+    pathIsInsideScriptEmbedInlineTwig
 } from "../util/index.js";
-import { SCRIPT_EMBED_INLINE_TWIG } from "../util/publicSymbols.js";
 
 const { group, indent, line } = doc.builders;
-
-const inlineTwigFromScriptEmbed = path =>
-    someParentNode(path, n => n[SCRIPT_EMBED_INLINE_TWIG] === true);
 
 const printExpressionStatement = (node, path, print) => {
     node[EXPRESSION_NEEDED] = false;
@@ -19,7 +15,7 @@ const printExpressionStatement = (node, path, print) => {
     const opener = node.trimLeft ? "{{-" : "{{";
     const closing = node.trimRight ? "-}}" : "}}";
     const shouldContractValue =
-        inlineTwigFromScriptEmbed(path) ||
+        pathIsInsideScriptEmbedInlineTwig(path) ||
         (isContractableNodeType(node.value) &&
             !Node.isObjectExpression(node.value));
     const padding = shouldContractValue ? " " : line;

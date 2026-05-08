@@ -164,7 +164,8 @@ export function scriptChildrenJsTwigEmbedFormatable(children) {
     return scriptMixedStatementListOk(children);
 }
 
-function normalizeScriptEmbedNewlines(text) {
+/** @param {string} text */
+export function normalizeScriptEmbedNewlines(text) {
     return text.replace(/\r\n/g, "\n").replace(/\r/g, "\n");
 }
 
@@ -345,8 +346,8 @@ function trimManifestTextBeforeIfBlocks(manifest) {
 
 /**
  * Parser attaches the whole gap (newlines + indent) before `{% endif %}` to the
- * preceding text node. {@link printEndifTagScriptEmbed} then emits {@link line}
- * plus indent again, so we drop **all** trailing whitespace on that text; the
+ * preceding text node. The script-embed printer then emits a line break plus
+ * indent again, so we drop **all** trailing whitespace on that text; the
  * printer recreates the newline + alignment before the tag.
  */
 function stripBranchEndTextBeforeIfClose(value) {

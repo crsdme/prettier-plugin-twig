@@ -11,6 +11,7 @@ import {
     buildScriptEmbedPlan,
     getScriptTypeAttribute,
     hasSrcAttribute,
+    normalizeScriptEmbedNewlines,
     scriptBodyParserForType,
     scriptChildrenJsTwigEmbedFormatable
 } from "./util/scriptEmbedding.js";
@@ -39,7 +40,7 @@ function trimScriptEmbedBlockTextEdges(text) {
  * {@link indent} on inner \\n — split into {@link hardline}-joined lines.
  */
 function scriptEmbedTextChunkToDoc(chunk, trimBlockEdges = false) {
-    let normalized = chunk.replace(/\r\n/g, "\n").replace(/\r/g, "\n");
+    let normalized = normalizeScriptEmbedNewlines(chunk);
     if (trimBlockEdges) {
         normalized = trimScriptEmbedBlockTextEdges(normalized);
     }
@@ -121,9 +122,8 @@ function printElseTag(node) {
     ];
 }
 
-function printEndifTag(node) {
+function scriptEmbedEndifTagParts(node) {
     return [
-        hardline,
         node.trimLeftEndif ? "{%-" : "{%",
         " endif ",
         node.trimRight ? "-%}" : "%}"
@@ -143,12 +143,11 @@ function scriptEmbedIndentUnit(options) {
  * `{% if %}` and at each branch end before `{% endif %}`) so repeated format stays stable.
  */
 function printEndifTagScriptEmbed(node, options) {
-    const tag = [
-        node.trimLeftEndif ? "{%-" : "{%",
-        " endif ",
-        node.trimRight ? "-%}" : "%}"
+    return [
+        line,
+        scriptEmbedIndentUnit(options),
+        ...scriptEmbedEndifTagParts(node)
     ];
-    return [line, scriptEmbedIndentUnit(options), ...tag];
 }
 
 function buildElseIfChainAssembly(chain, path, print) {
@@ -298,6 +297,15 @@ function consumeManifestItems(formatted, manifest, ctx, trimBlockTextEdges) {
     return docs;
 }
 
+function withScriptEmbedInlineTwigFlag(scriptNode, fn) {
+    scriptNode[SCRIPT_EMBED_INLINE_TWIG] = true;
+    try {
+        return fn();
+    } finally {
+        delete scriptNode[SCRIPT_EMBED_INLINE_TWIG];
+    }
+}
+
 function manifestFormattedToDoc(
     formatted,
     manifest,
@@ -306,7 +314,7 @@ function manifestFormattedToDoc(
     scriptNode,
     options
 ) {
-    const normalized = formatted.replace(/\r\n/g, "\n").replace(/\r/g, "\n");
+    const normalized = normalizeScriptEmbedNewlines(formatted);
     const ctx = {
         formatted: normalized,
         cursor: 0,
@@ -315,8 +323,7 @@ function manifestFormattedToDoc(
         print,
         options
     };
-    scriptNode[SCRIPT_EMBED_INLINE_TWIG] = true;
-    try {
+    return withScriptEmbedInlineTwigFlag(scriptNode, () => {
         const docs = consumeManifestItems(normalized, manifest, ctx, false);
         ctx.cursor = skipWs(normalized, ctx.cursor);
         if (ctx.cursor < normalized.length) {
@@ -333,9 +340,7 @@ function manifestFormattedToDoc(
             return flat[0];
         }
         return flat;
-    } finally {
-        delete scriptNode[SCRIPT_EMBED_INLINE_TWIG];
-    }
+    });
 }
 
 function printMixedScriptChildrenDoc(path, print) {
