@@ -11,11 +11,15 @@ import {
     isMultipartExpression,
     getDeepProperty
 } from "../util/index.js";
+import { SCRIPT_EMBED_INLINE_TWIG } from "../util/publicSymbols.js";
 
 const { group, indent, line, softline, join } = doc.builders;
 
 const isInFilterBlock = path =>
     someParentNode(path, node => node[FILTER_BLOCK] === true);
+
+const inlineTwigFromScriptEmbed = path =>
+    someParentNode(path, n => n[SCRIPT_EMBED_INLINE_TWIG] === true);
 
 const printArguments = (node, path, print, nodePath) => {
     const hasArguments = node.arguments && node.arguments.length > 0;
@@ -106,6 +110,10 @@ const printFilterExpression = (node, path, print, options) => {
     if (filterExpressions.length === 1) {
         // No breaks and indentation for just one expression
         parts.push(`${space}|${space}`, filterExpressions[0]);
+    } else if (filterExpressions.length > 1 && inlineTwigFromScriptEmbed(path)) {
+        for (const fe of filterExpressions) {
+            parts.push(`${space}|${space}`, fe);
+        }
     } else if (filterExpressions.length > 1) {
         const indentedFilters = [
             spaceAroundPipe ? line : softline,

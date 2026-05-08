@@ -11,6 +11,45 @@ const GAP = "[ \\t]";
 const GAP_OPT = `${GAP}*`;
 const GAP_1 = `${GAP}+`;
 
+/** Split `foo const x` / `Foo const x` (missing newline); skips obvious keywords (export const, …). */
+const ID_BEFORE_DECL = /(\b[a-zA-Z_$][\w$]*)([ \t]+)(?=\b(?:const|let|var)\b)/g;
+
+const NO_BREAK_BEFORE_DECL = new Set([
+    "export",
+    "import",
+    "default",
+    "extends",
+    "implements",
+    "static",
+    "case",
+    "else",
+    "typeof",
+    "void",
+    "delete",
+    "in",
+    "of",
+    "instanceof",
+    "await",
+    "yield",
+    "return",
+    "throw",
+    "new",
+    "function",
+    "class",
+    "enum",
+    "interface",
+    "package",
+    "private",
+    "protected",
+    "public",
+    "super",
+    "this",
+    "with",
+    "debugger",
+    "from",
+    "as"
+]);
+
 const RULES = [
     [
         new RegExp(`(\\)|\\]|\\})(${GAP_OPT})(?=\\b(?:const|let|var)\\b)`, "g"),
@@ -57,6 +96,9 @@ export function repairConcatenatedStatements(source) {
         for (const [pattern, replacement] of RULES) {
             s = s.replace(pattern, replacement);
         }
+        s = s.replace(ID_BEFORE_DECL, (full, id, gap) =>
+            NO_BREAK_BEFORE_DECL.has(id) ? full : `${id}\n${gap}`
+        );
         guard++;
     } while (s !== prev && guard < 24);
     return s;
